@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gradial — Premium Skeuomorphic Image Color Eraser & Animated Gradient Generator">
+  <title>Gradial — Color Eraser & Gradient Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2349A078'/><text x='50' y='68' font-size='60' font-weight='800' text-anchor='middle' fill='%23ffffff'>G</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <script src="assets/lucide.min.js"></script>
+</head>
+<body>
+
+  <!-- Hidden Processing Canvases -->
+  <canvas id="processing-canvas" class="hidden"></canvas>
+  <canvas id="export-canvas" class="hidden"></canvas>
+
+  <!-- ==================== SNAPPY EXPORT PROGRESS MODAL ==================== -->
+  <div id="export-modal-overlay" class="export-modal-backdrop hidden">
+    <div class="export-modal-card skeu-raised" style="position: relative;">
+
+      <div class="export-modal-header">
+        <div class="export-spinner-icon" id="export-icon-container">
+          <i data-lucide="loader" class="spin-icon" style="color:var(--color-seaweed);"></i>
+        </div>
+        <div class="export-header-text">
+          <h3 id="export-modal-title" class="export-modal-h3">Exporting</h3>
+          <span id="export-modal-status" class="export-modal-sub">Initializing...</span>
+        </div>
+        <span id="export-modal-percent" class="export-percent-badge">0%</span>
+      </div>
+
+      <!-- Video Export Preview -->
+      <div id="export-preview-container" class="hidden" style="width:100%; border-radius:var(--radius-lg); overflow:hidden; background:#000; box-shadow:inset 0 0 10px rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; min-height:120px;">
+        <canvas id="export-preview-canvas" style="max-width:100%; max-height:200px; object-fit:contain;"></canvas>
+      </div>
+
+      <!-- Snappy Progress Bar Track -->
+      <div class="export-progress-track skeu-inset">
+        <div id="export-progress-fill" class="export-progress-fill-bar" style="width: 0%;"></div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button class="btn-sk btn-secondary-sk btn-xs-compact" id="export-modal-cancel-btn">
+          <i data-lucide="x" style="width:14px; height:14px;"></i> <span>Cancel Export</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TERMS & CONDITIONS MODAL ==================== -->
+  <div id="terms-modal-overlay" class="export-modal-backdrop hidden" style="backdrop-filter: blur(12px); z-index: 9999;">
+    <div class="export-modal-card skeu-raised" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px; max-width: 540px; width: 90%; box-shadow: 0 24px 48px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 16px; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <span style="font-size: 1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="shield-check" style="width: 20px; height: 20px; color: var(--accent-primary);"></i> Terms & Conditions — License
+        </span>
+        <button id="terms-modal-close-btn" class="settings-close-btn" title="Close (Esc)">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div style="max-height: 320px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; color: var(--text-sub); display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+        <div style="background: var(--bg-recessed); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 0.78rem;">
+          Copyright (c) 2026 RSA Engineering & Contributors.<br>
+          Licensed under Open Source Software Licensing (GPLv3 / MIT Compatible).<br>
+          Creative Assistance: Ahmad2012k
+        </div>
+        <p><strong>1. Open Source Software License:</strong> Gradial is open-source software provided under free and open-source licensing terms in compliance with IMG.LY background removal and media processing requirements.</p>
+        <p><strong>2. Authorized Usage & Contributions:</strong> Gradial provides tools for creating, editing, and exporting linear, positional, procedural animated gradients, AI background removal, and video subtitles. Source code is freely available for open-source inspection, contribution, and modification.</p>
+        <p><strong>3. User Media Rights:</strong> All exported media (PNG, MP4, WebM, VTT, SRT) created by users belong to the respective user for personal and commercial projects.</p>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 12px;">
+        <button class="btn-sk btn-primary-sk" id="terms-modal-accept-btn" style="padding: 8px 20px; font-size: 0.85rem;">
+          Accept
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MY GRADIAL FULL-FLEDGED SETTINGS PAGE ==================== -->
+  <div id="settings-modal-overlay" class="export-modal-backdrop hidden">
+    <div class="export-modal-card skeu-raised settings-modal-card settings-page-card">
+      
+      <!-- Top Header Bar -->
+      <div class="settings-page-header">
+        <div class="settings-header-left">
+          <div class="settings-header-icon-box">
+            <i data-lucide="settings" style="width:22px; height:22px;"></i>
+          </div>
+          <div>
+            <h3 class="settings-page-title">My Gradial — Settings & Preferences</h3>
+            <p class="settings-page-subtext">Customize themes, audio feedback, rendering quality, export defaults, and application preferences.</p>
+          </div>
+        </div>
+        <button id="close-settings-btn" class="settings-close-btn" title="Close Settings (Esc)">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Main Settings Body -->
+      <div class="settings-page-body">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="settings-nav-sidebar">
+          <button class="settings-nav-item active" data-settings-section="themes">
+            <i data-lucide="palette"></i> Themes & Appearance
+          </button>
+          <button class="settings-nav-item" data-settings-section="audio">
+            <i data-lucide="volume-2"></i> Audio & Sound Effects
+          </button>
+          <button class="settings-nav-item" data-settings-section="export">
+            <i data-lucide="film"></i> Video & Export Defaults
+          </button>
+          <button class="settings-nav-item" data-settings-section="shortcuts">
+            <i data-lucide="keyboard"></i> Hotkey Cheatsheet
+          </button>
+          <button class="settings-nav-item" data-settings-section="info">
+            <i data-lucide="info"></i> App & System Specs
+          </button>
+        </nav>
+
+        <!-- Content Panels Area -->
+        <div class="settings-content-area">
+          
+          <!-- Section 1: Themes & Appearance -->
+          <div class="settings-section-panel active" id="settings-section-themes">
+            <!-- Standard Modern Themes -->
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <i data-lucide="palette" style="width: 16px; height: 16px; color: var(--accent-primary);"></i>
+                <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-sub); margin: 0;">Standard & Modern Themes</h4>
+              </div>
+              <div class="theme-grid">
+                <!-- Seaweed Default -->
+                <div class="theme-card skeu-inset active" data-theme="">
+                  <div class="theme-colors">
+                    <div style="background:#0F1110;"></div>
+                    <div style="background:#171B19;"></div>
+                    <div style="background:#216869;"></div>
+                    <div style="background:#49A078;"></div>
+                  </div>
+                  <span class="theme-name">Seaweed Default</span>
+                </div>
+                
+                <!-- Golden Sand -->
+                <div class="theme-card skeu-inset" data-theme="theme-golden-sand">
+                  <div class="theme-colors">
+                    <div style="background:#FAF7EA;"></div>
+                    <div style="background:#F3EED5;"></div>
+                    <div style="background:#D5B942;"></div>
+                    <div style="background:#C29A26;"></div>
+                  </div>
+                  <span class="theme-name">Golden Sand (Light Luxe)</span>
+                </div>
+
+                <!-- Fire & Ice -->
+                <div class="theme-card skeu-inset" data-theme="theme-fire-ice">
+                  <div class="theme-colors">
+                    <div style="background:#060B10;"></div>
+                    <div style="background:#121E2C;"></div>
+                    <div style="background:#01BAEF;"></div>
+                    <div style="background:#B80C09;"></div>
+                  </div>
+                  <span class="theme-name">Fire & Ice</span>
+                </div>
+
+                <!-- Aqua Blossom -->
+                <div class="theme-card skeu-inset" data-theme="theme-aqua-blossom">
+                  <div class="theme-colors">
+                    <div style="background:#18191B;"></div>
+                    <div style="background:#282B2F;"></div>
+                    <div style="background:#53D8FB;"></div>
+                    <div style="background:#D4AFB9;"></div>
+                  </div>
+                  <span class="theme-name">Aqua Blossom</span>
+                </div>
+
+                <!-- Oxidized Earth -->
+                <div class="theme-card skeu-inset" data-theme="theme-oxidized-earth">
+                  <div class="theme-colors">
+                    <div style="background:#080B05;"></div>
+                    <div style="background:#182011;"></div>
+                    <div style="background:#BBC5AA;"></div>
+                    <div style="background:#A72608;"></div>
+                  </div>
+                  <span class="theme-name">Oxidized Earth</span>
+                </div>
+
+                <!-- Dusty Slate -->
+                <div class="theme-card skeu-inset" data-theme="theme-dusty-slate">
+                  <div class="theme-colors">
+                    <div style="background:#161918;"></div>
+                    <div style="background:#272C2B;"></div>
+                    <div style="background:#C7CEDB;"></div>
+                    <div style="background:#94849B;"></div>
+                  </div>
+                  <span class="theme-name">Dusty Slate</span>
+                </div>
+
+                <!-- Midnight Purple -->
+                <div class="theme-card skeu-inset" data-theme="theme-midnight-purple">
+                  <div class="theme-colors">
+                    <div style="background:#0D0B1A;"></div>
+                    <div style="background:#13102B;"></div>
+                    <div style="background:#9382FF;"></div>
+                    <div style="background:#FF6EB4;"></div>
+                  </div>
+                  <span class="theme-name">Midnight Purple</span>
+                </div>
+
+                <!-- Sakura -->
+                <div class="theme-card skeu-inset" data-theme="theme-sakura">
+                  <div class="theme-colors">
+                    <div style="background:#FFF5F7;"></div>
+                    <div style="background:#FFE8ED;"></div>
+                    <div style="background:#FF6987;"></div>
+                    <div style="background:#FF9AB5;"></div>
+                  </div>
+                  <span class="theme-name">Sakura</span>
+                </div>
+
+                <!-- Neon Noir -->
+                <div class="theme-card skeu-inset" data-theme="theme-neon-noir">
+                  <div class="theme-colors">
+                    <div style="background:#0A0A0A;"></div>
+                    <div style="background:#111111;"></div>
+                    <div style="background:#00FF88;"></div>
+                    <div style="background:#FF0066;"></div>
+                  </div>
+                  <span class="theme-name">Neon Noir</span>
+                </div>
+
+                <!-- Ocean Depths -->
+                <div class="theme-card skeu-inset" data-theme="theme-ocean-depths">
+                  <div class="theme-colors">
+                    <div style="background:#040D18;"></div>
+                    <div style="background:#081828;"></div>
+                    <div style="background:#00B4D8;"></div>
+                    <div style="background:#CAF0F8;"></div>
+                  </div>
+                  <span class="theme-name">Ocean Depths</span>
+                </div>
+
+                <!-- Vampire Velvet -->
+                <div class="theme-card skeu-inset" data-theme="theme-vampire-velvet">
+                  <div class="theme-colors">
+                    <div style="background:#280000"></div>
+                    <div style="background:#570000"></div>
+                    <div style="background:#B10F2E"></div>
+                    <div style="background:#DE7C5A"></div>
+                  </div>
+                  <span class="theme-name">Vampire Velvet</span>
+                </div>
+
+                <!-- Mystic Steel -->
+                <div class="theme-card skeu-inset" data-theme="theme-mystic-steel">
+                  <div class="theme-colors">
+                    <div style="background:#303633"></div>
+                    <div style="background:#7EA2AA"></div>
+                    <div style="background:#8BE8CB"></div>
+                    <div style="background:#888DA7"></div>
+                  </div>
+                  <span class="theme-name">Mystic Steel</span>
+                </div>
+
+                <!-- Jungle Celadon -->
+                <div class="theme-card skeu-inset" data-theme="theme-jungle-celadon">
+                  <div class="theme-colors">
+                    <div style="background:#12130F"></div>
+                    <div style="background:#5B9279"></div>
+                    <div style="background:#8FCB9B"></div>
+                    <div style="background:#8F8073"></div>
+                  </div>
+                  <span class="theme-name">Jungle Celadon</span>
+                </div>
+
+                <!-- Neon Forest -->
+                <div class="theme-card skeu-inset" data-theme="theme-neon-forest">
+                  <div class="theme-colors">
+                    <div style="background:#293F14"></div>
+                    <div style="background:#386C0B"></div>
+                    <div style="background:#38A700"></div>
+                    <div style="background:#3EFF8B"></div>
+                  </div>
+                  <span class="theme-name">Neon Forest</span>
+                </div>
+
+                <!-- Retro Pop -->
+                <div class="theme-card skeu-inset" data-theme="theme-retro-pop">
+                  <div class="theme-colors">
+                    <div style="background:#50514F"></div>
+                    <div style="background:#F25F5C"></div>
+                    <div style="background:#FFE066"></div>
+                    <div style="background:#247BA0"></div>
+                  </div>
+                  <span class="theme-name">Retro Pop</span>
+                </div>
+
+                <!-- Nord -->
+                <div class="theme-card skeu-inset" data-theme="theme-nord">
+                  <div class="theme-colors">
+                    <div style="background:#2E3440"></div>
+                    <div style="background:#3B4252"></div>
+                    <div style="background:#88C0D0"></div>
+                    <div style="background:#A3BE8C"></div>
+                  </div>
+                  <span class="theme-name">Nord</span>
+                </div>
+
+                <!-- Solarized Dark -->
+                <div class="theme-card skeu-inset" data-theme="theme-solarized-dark">
+                  <div class="theme-colors">
+                    <div style="background:#002B36"></div>
+                    <div style="background:#073642"></div>
+                    <div style="background:#268BD2"></div>
+                    <div style="background:#2AA198"></div>
+                  </div>
+                  <span class="theme-name">Solarized Dark</span>
+                </div>
+
+                <!-- Synthwave -->
+                <div class="theme-card skeu-inset" data-theme="theme-synthwave">
+                  <div class="theme-colors">
+                    <div style="background:#1A0B2E"></div>
+                    <div style="background:#6A1B8F"></div>
+                    <div style="background:#FF2E97"></div>
+                    <div style="background:#00E5FF"></div>
+                  </div>
+                  <span class="theme-name">Synthwave</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Retro & Special Themes Section (Unlocked & Unblurred) -->
+            <div style="margin-top: 20px; position: relative;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <i data-lucide="sparkles" style="width: 16px; height: 16px; color: var(--accent-primary);"></i>
+                  <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-sub); margin: 0;">Special & Retro Aesthetics</h4>
+                </div>
+              </div>
+              <div class="theme-grid" style="filter: none; opacity: 1; pointer-events: auto; user-select: auto;">
+                <!-- Frutiger Aero -->
+                <div class="theme-card skeu-inset special-theme-card" data-theme="theme-frutiger-aero" style="background: linear-gradient(180deg, #CBE5FF, #76B6FF); border: 2px solid rgba(255,255,255,0.9);">
+                  <div class="theme-colors">
+                    <div style="background:#CBE5FF"></div>
+                    <div style="background:#0099FF"></div>
+                    <div style="background:#2BE072"></div>
+                    <div style="background:#FFFFFF"></div>
+                  </div>
+                  <span class="theme-name" style="color:#002244; font-weight:700;">Frutiger Aero</span>
+                </div>
+
+                <!-- Original Xbox (2001) -->
+                <div class="theme-card skeu-inset special-theme-card" data-theme="theme-xbox" style="background: #001C05; border: 1.5px solid #39FF14;">
+                  <div class="theme-colors">
+                    <div style="background:#001C05"></div>
+                    <div style="background:#003B0D"></div>
+                    <div style="background:#55FF00"></div>
+                    <div style="background:#39FF14"></div>
+                  </div>
+                  <span class="theme-name" style="color:#55FF00; font-weight:800;">Original Xbox</span>
+                </div>
+
+                <!-- Windows XP -->
+                <div class="theme-card skeu-inset special-theme-card" data-theme="theme-windows-xp" style="background: #ECE9D8; border: 2px solid #003C9D;">
+                  <div class="theme-colors">
+                    <div style="background:#0055EA"></div>
+                    <div style="background:#245EDB"></div>
+                    <div style="background:#ECE9D8"></div>
+                    <div style="background:#3CC100"></div>
+                  </div>
+                  <span class="theme-name" style="color:#003C9D; font-weight:700;">Windows XP (Luna)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Audio & Sound Effects -->
+          <div class="settings-section-panel hidden" id="settings-section-audio">
+            <div class="settings-card-box">
+              <h4 class="settings-card-title"><i data-lucide="volume-2" style="width:18px; height:18px; color:var(--accent-primary);"></i> UI Sound Effects & Feedback</h4>
+              
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">Skeuomorphic Audio Feedback</span>
+                  <span class="settings-desc">Synthesized Web Audio clicks, pops, and slider feedback tones.</span>
+                </div>
+                <button id="setting-sound-toggle" class="segmented-btn active" style="flex: 0 0 auto; padding: 6px 14px; border-radius: var(--radius-full);">
+                  <i data-lucide="volume-2"></i> <span id="setting-sound-text">Enabled</span>
+                </button>
+              </div>
+
+              <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="settings-label">Master Sound Volume</span>
+                  <span id="setting-volume-val" style="font-size: 0.8rem; font-weight: 700; color: var(--accent-primary);">80%</span>
+                </div>
+                <input type="range" id="setting-volume-slider" min="0" max="100" value="80" class="sk-slider">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Video & Export Defaults -->
+          <div class="settings-section-panel hidden" id="settings-section-export">
+            <div class="settings-card-box">
+              <h4 class="settings-card-title"><i data-lucide="film" style="width:18px; height:18px; color:var(--accent-primary);"></i> Video Studio & Export Preferences</h4>
+              
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">Default Export Container</span>
+                  <span class="settings-desc">High-bitrate WebCodecs container format for animated gradient sequences.</span>
+                </div>
+                <div class="segmented-control" style="width: auto;">
+                  <button class="segmented-btn active" id="setting-export-fmt-mp4" data-fmt="mp4">MP4 (H.264)</button>
+                  <button class="segmented-btn" id="setting-export-fmt-webm" data-fmt="webm">WebM (VP8)</button>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">Target Export Frame Rate</span>
+                  <span class="settings-desc">Output video framerate encoding quality.</span>
+                </div>
+                <div class="segmented-control" style="width: auto;">
+                  <button class="segmented-btn active" id="setting-export-fps-60" data-fps="60">60 FPS</button>
+                  <button class="segmented-btn" id="setting-export-fps-30" data-fps="30">30 FPS</button>
+                </div>
+              </div>
+
+              <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="settings-label">Default Video Target Bitrate</span>
+                  <span id="setting-export-bitrate-val" style="font-size: 0.8rem; font-weight: 700; color: var(--accent-primary);">20 Mbps</span>
+                </div>
+                <input type="range" id="setting-export-bitrate-slider" min="5" max="50" value="20" class="sk-slider">
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">Alpha Channel Transparency</span>
+                  <span class="settings-desc">Export video/image with transparent background grid preserved.</span>
+                </div>
+                <button id="setting-export-alpha-toggle" class="segmented-btn" style="flex: 0 0 auto; padding: 6px 14px; border-radius: var(--radius-full);">
+                  <i data-lucide="layers"></i> <span id="setting-export-alpha-text">Disabled</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Groq API Key Configuration -->
+            <div class="settings-card-box" style="margin-top: 16px;">
+              <h4 class="settings-card-title"><i data-lucide="key" style="width:18px; height:18px; color:var(--accent-primary);"></i> Groq API Key (AI Subtitles)</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                Enter your Groq API key (`gsk_...`) to enable speech-to-text AI subtitle generation for video clips.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="password" id="settings-groq-api-key-input" placeholder="gsk_..." class="sk-input" style="flex: 1; font-family: monospace; font-size: 0.8rem; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+                  <button class="btn-sk btn-secondary-sk" id="toggle-groq-key-vis-settings" title="Show/Hide Key" style="padding: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                  </button>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                  <button class="btn-sk btn-primary-sk" id="check-groq-api-key-btn" style="padding: 6px 14px; font-size: 0.76rem; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Check API Key
+                  </button>
+                  <span id="settings-groq-key-status" style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); padding: 4px 10px; border-radius: 4px; background: var(--bg-recessed); border: 1px solid var(--border-subtle);">
+                    Not Checked
+                  </span>
+                </div>
+
+                <!-- Walkthrough Guide for Groq API Key & Whisper v3 Turbo -->
+                <div style="margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--bg-recessed); border: 1px solid var(--border-color);">
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 8px;">
+                    <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i> How to get a Groq API Key (Whisper Large v3 Turbo)
+                  </div>
+                  
+                  <ol style="margin: 0; padding-left: 18px; font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; line-height: 1.4;">
+                    <li>
+                      Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); font-weight: 700; text-decoration: underline;">console.groq.com/keys</a> and sign up or log in for free.
+                    </li>
+                    <li>
+                      Click <strong style="color: var(--text-main);">"Create API Key"</strong>, name it (e.g., <em>Gradial AI Subtitles</em>), and copy your key (<code style="font-family: monospace; font-size: 0.7rem; color: var(--accent-primary); background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px;">gsk_...</code>).
+                    </li>
+                    <li>
+                      Paste your key into the field above and click <strong style="color: var(--text-main);">"Check API Key"</strong>. The high-speed <strong style="color: var(--accent-primary);">Whisper Large v3 Turbo</strong> AI model will automatically generate subtitles for your videos!
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: Hotkey Cheatsheet -->
+          <div class="settings-section-panel hidden" id="settings-section-shortcuts">
+            <div class="settings-card-box">
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <h4 class="settings-card-title"><i data-lucide="keyboard" style="width:18px; height:18px; color:var(--accent-primary);"></i> Keyboard Shortcuts & Quick Actions</h4>
+                <button id="copy-hotkeys-btn" class="btn-sk btn-secondary-sk" style="padding: 4px 10px; font-size: 0.72rem;">
+                  <i data-lucide="copy"></i> Copy Cheatsheet
+                </button>
+              </div>
+              
+              <table class="shortcut-table">
+                <thead>
+                  <tr>
+                    <th>Action / Feature</th>
+                    <th>Shortcut</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Switch Workspace Mode</td>
+                    <td><span class="shortcut-key">1</span> <span class="shortcut-key">2</span> <span class="shortcut-key">3</span></td>
+                    <td>Toggle between Image, Gradient, and Video Studio modes</td>
+                  </tr>
+                  <tr>
+                    <td>Pan / Hand Tool</td>
+                    <td><span class="shortcut-key">Space</span></td>
+                    <td>Hold space to pan around canvas viewports</td>
+                  </tr>
+                  <tr>
+                    <td>Undo Image Edit</td>
+                    <td><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">Z</span></td>
+                    <td>Revert last brush stroke or color eraser action</td>
+                  </tr>
+                  <tr>
+                    <td>Redo Image Edit</td>
+                    <td><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">Shift</span> + <span class="shortcut-key">Z</span></td>
+                    <td>Re-apply undone edit step</td>
+                  </tr>
+                  <tr>
+                    <td>Toggle Sound Effects</td>
+                    <td><span class="shortcut-key">M</span></td>
+                    <td>Mute or enable UI audio feedback</td>
+                  </tr>
+                  <tr>
+                    <td>Export Animation</td>
+                    <td><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">E</span></td>
+                    <td>Open export video/image dialog</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 6: App & System Specs -->
+          <div class="settings-section-panel hidden" id="settings-section-info">
+            <div class="settings-card-box">
+              <h4 class="settings-card-title"><i data-lucide="info" style="width:18px; height:18px; color:var(--accent-primary);"></i> Application Specifications</h4>
+              
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">Gradial Engine Version</span>
+                  <span class="settings-desc">Build 2.4.0 — High-Performance Vanilla JS</span>
+                </div>
+                <span style="font-size:0.8rem; font-weight:700; color:var(--accent-primary);">v2.4.0</span>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">Icon Engine & Offline Suite</span>
+                  <span class="settings-desc">Bundled Lucide Vector Suite (100% offline)</span>
+                </div>
+                <span style="font-size:0.8rem; font-weight:700; color:var(--text-main);">Lucide v0.294</span>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <span class="settings-label">WebCodecs Video Encoder Status</span>
+                  <span class="settings-desc">Hardware VideoEncoder API available for instant MP4 muxing.</span>
+                </div>
+                <span style="font-size:0.8rem; font-weight:700; color:var(--accent-primary);">Active & Hardware Accelerated</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <!-- Logo / Brand -->
+        <div class="brand-row" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div id="open-my-gradial-btn" style="display:flex; align-items:center; gap:12px; cursor:pointer;" title="My Gradial — settings, themes & adjustments">
+            <div class="brand-avatar-box">
+              <svg class="brand-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="gradialLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="var(--accent-secondary)"/>
+                    <stop offset="100%" stop-color="var(--accent-primary)"/>
+                  </linearGradient>
+                  <filter id="gradialGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <rect x="2" y="2" width="36" height="36" rx="10" fill="url(#gradialLogoGrad)" opacity="0.18" stroke="var(--border-color)" stroke-width="1.2"/>
+                <path d="M 27 13.5 C 23.5 10 16.5 10 12.5 14 C 8.5 18 8.5 24.5 12.5 28.5 C 16.5 32.5 24 32.5 27.5 27.5 C 29.5 24.5 29.5 21 29.5 21 L 19.5 21 L 19.5 25 L 25.2 25 C 24.2 27.2 20.8 28.5 17 26.5 C 13.2 24.5 13.2 17.5 17 15.5 C 19.5 14.2 23.2 15 24.8 16.8 L 27.8 13.8 Z" 
+                      fill="url(#gradialLogoGrad)" filter="url(#gradialGlow)"/>
+                <circle cx="19.5" cy="21" r="2.2" fill="var(--accent-primary)"/>
+              </svg>
+            </div>
+            <span class="brand-title">Gradial</span>
+          </div>
+          <button id="open-settings-btn" class="settings-icon-btn" title="Theme Settings"><i data-lucide="settings"></i></button>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+
+        <!-- Sidebar Mode Pill Switcher -->
+        <div class="tab-pill-container" style="margin-bottom: 12px;">
+          <button class="tab-pill-btn active" id="tab-btn-image" data-tab="image">
+            <i data-lucide="image"></i> Image
+          </button>
+          <button class="tab-pill-btn" id="tab-btn-gradient" data-tab="gradient">
+            <i data-lucide="palette"></i> Gradient
+          </button>
+          <button class="tab-pill-btn" id="tab-btn-video" data-tab="video">
+            <i data-lucide="video"></i> Video
+          </button>
+        </div>
+
+        <!-- ================= IMAGE / ERASER TAB ================= -->
+        <div id="sidebar-image-controls">
+
+          <!-- Target Color Box -->
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Target Color</span>
+            </div>
+
+            <div class="color-display-box" id="target-color-box" title="Click to Pick Color from Image" style="cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease;">
+              <div class="color-preview-thumb" id="target-color-thumb" style="background-color: #FFFFFF;"></div>
+              <div class="color-details" style="flex: 1;">
+                <span class="color-details-label">Selected Hex</span>
+                <span class="color-details-hex" id="target-color-hex">#FFFFFF</span>
+              </div>
+              <i data-lucide="pipette" style="width: 16px; height: 16px; color: var(--accent-primary); opacity: 0.8;"></i>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Tolerance Slider -->
+          <div class="section-block">
+            <div class="slider-container">
+              <div class="slider-info-row">
+                <div class="section-header" style="margin-bottom: 0;">
+                  <div class="section-indicator"></div>
+                  <span class="section-title-text">Tolerance</span>
+                </div>
+                <span class="slider-val-badge" id="tolerance-val">0%</span>
+              </div>
+              <input type="range" id="tolerance-slider" min="0" max="100" value="0">
+              <div class="slider-sublabels">
+                <span>Off (0%)</span>
+                <span>Max (100%)</span>
+              </div>
+            </div>
+
+            <div class="slider-container" style="margin-top: 12px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Edge Feather</span>
+                <span class="slider-val-badge" id="edge-feather-val">0%</span>
+              </div>
+              <input type="range" id="edge-feather-slider" min="0" max="100" value="0">
+            </div>
+          </div>
+
+          <!-- AI Magic Tools Section -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text"><i data-lucide="wand-2" style="width:14px; height:14px; color:var(--accent-primary);"></i> Background Removal</span>
+            </div>
+            
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+              <button class="btn-sk btn-primary-sk" id="ai-remove-bg-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 0.76rem; padding: 8px 6px;">
+                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Remove BG
+              </button>
+              <button class="btn-sk btn-secondary-sk" id="ai-dof-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 0.76rem; padding: 8px 6px;">
+                <i data-lucide="aperture" style="width: 14px; height: 14px;"></i> Depth of Field
+              </button>
+            </div>
+
+            <!-- Model Quality Switcher -->
+            <div class="segmented-control" style="margin-top: 4px;">
+              <button class="segmented-btn active" id="ai-bg-model-fast" data-model="small">Fast Model</button>
+              <button class="segmented-btn" id="ai-bg-model-quality" data-model="medium">High Quality</button>
+            </div>
+
+            <!-- Depth of Field Blur Slider (visible when Depth of Field is active) -->
+            <div id="dof-blur-container" class="slider-container hidden" style="margin-top: 10px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Background Bokeh Blur</span>
+                <span class="slider-val-badge" id="dof-blur-val">12px</span>
+              </div>
+              <input type="range" id="dof-blur-slider" min="0" max="40" value="12">
+            </div>
+
+            <!-- Backdrop Replacement Mode -->
+            <div style="margin-top: 12px;">
+              <div class="slider-title" style="margin-bottom: 6px;">Backdrop Replacement</div>
+              <div class="segmented-control">
+                <button class="segmented-btn active" id="bg-replace-transparent" data-bg="transparent">
+                  <i data-lucide="grid"></i> PNG Alpha
+                </button>
+                <button class="segmented-btn" id="bg-replace-mesh" data-bg="mesh">
+                  <i data-lucide="palette"></i> Mesh
+                </button>
+                <button class="segmented-btn" id="bg-replace-solid" data-bg="solid">
+                  <i data-lucide="square"></i> Solid
+                </button>
+              </div>
+
+              <!-- Solid Backdrop Color Trigger (visible in Solid mode) -->
+              <div id="bg-solid-color-row" class="hidden" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-recessed); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+                <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-sub);">Solid Color:</span>
+                <div class="color-picker-wrap custom-cp-trigger" id="bg-solid-color-picker" style="cursor: pointer;">
+                  <div class="color-picker-swatch" id="bg-solid-color-swatch" style="background-color: #171B19; width: 22px; height: 22px; border-radius: 4px; border: 1px solid #FFFFFF;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Processing Status & Progress Bar -->
+            <div id="ai-bg-status-container" class="hidden" style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.72rem; font-weight: 700; color: var(--text-main);">
+                <span id="ai-bg-status-text">Initializing AI Model...</span>
+                <span id="ai-bg-percent-text">0%</span>
+              </div>
+              <div class="ai-progress-track">
+                <div class="ai-progress-fill" id="ai-bg-progress-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Eraser Tool Mode Switcher (Color vs Manual Brush) -->
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Eraser Tool</span>
+            </div>
+            
+            <div class="segmented-control">
+              <button class="segmented-btn active" id="eraser-mode-color" data-mode="color">
+                <i data-lucide="sparkles"></i> Color
+              </button>
+              <button class="segmented-btn" id="eraser-mode-brush" data-mode="brush">
+                <i data-lucide="paintbrush"></i> Brush
+              </button>
+              <button class="segmented-btn" id="eraser-mode-pan" data-mode="pan" title="Hold Spacebar to quickly pan">
+                <i data-lucide="move"></i> Pan
+              </button>
+            </div>
+
+            <!-- Brush Size Control (visible in Brush mode) -->
+            <div id="brush-controls-panel" class="hidden" style="margin-top: 14px;">
+              <div class="slider-container">
+                <div class="slider-info-row">
+                  <span class="slider-title">Brush Size</span>
+                  <span class="slider-val-badge" id="brush-size-val">30px</span>
+                </div>
+                <input type="range" id="brush-size-slider" min="5" max="150" value="30">
+              </div>
+
+              <div style="height: 10px;"></div>
+
+              <div class="segmented-control">
+                <button class="segmented-btn active" id="brush-action-erase" data-action="erase" style="width: 100%;">
+                  <i data-lucide="eraser"></i> Erase Brush
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Photographic Styles 2D Controller Pad -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="style-pad-wrapper">
+              <div class="style-pad-header">
+                <span class="style-pad-title"><i data-lucide="sliders" style="width:14px; height:14px; color:var(--color-seaweed);"></i> Photographic Style</span>
+              </div>
+              <div class="style-pad-touch-area" id="img-style-pad-touch">
+                <span class="style-pad-axis-label axis-top">+ Contrast</span>
+                <span class="style-pad-axis-label axis-bottom">- Contrast</span>
+                <span class="style-pad-axis-label axis-left">Cool</span>
+                <span class="style-pad-axis-label axis-right">Warm</span>
+                
+                <div class="style-pad-crosshair-h"></div>
+                <div class="style-pad-crosshair-v"></div>
+
+                <div class="style-pad-grid-dots" id="img-style-pad-dots">
+                  <!-- 49 dots generated by JS -->
+                </div>
+
+                <div class="style-pad-glow" id="img-style-pad-glow"></div>
+                <div class="style-pad-puck" id="img-style-pad-puck"></div>
+              </div>
+              <button class="style-pad-reset-btn" id="img-style-pad-reset-btn">Reset Style Pad</button>
+            </div>
+          </div>
+
+          <!-- Cinematic Filters -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Filters for Images</span>
+            </div>
+
+            <div class="lut-preset-grid" id="img-lut-grid">
+              <!-- Dynamically populated filter cards -->
+            </div>
+          </div>
+
+          <!-- Image Adjustments Filters -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Image Filters</span>
+            </div>
+            
+            <!-- Brightness -->
+            <div class="slider-container" style="margin-bottom: 8px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Brightness</span>
+                <span class="slider-val-badge" id="filter-brightness-val">100%</span>
+              </div>
+              <input type="range" id="filter-brightness" min="0" max="200" value="100">
+            </div>
+
+            <!-- Contrast -->
+            <div class="slider-container" style="margin-bottom: 8px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Contrast</span>
+                <span class="slider-val-badge" id="filter-contrast-val">100%</span>
+              </div>
+              <input type="range" id="filter-contrast" min="0" max="200" value="100">
+            </div>
+
+            <!-- Saturation -->
+            <div class="slider-container" style="margin-bottom: 8px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Saturation</span>
+                <span class="slider-val-badge" id="filter-saturate-val">100%</span>
+              </div>
+              <input type="range" id="filter-saturate" min="0" max="200" value="100">
+            </div>
+
+            <!-- Blur -->
+            <div class="slider-container">
+              <div class="slider-info-row">
+                <span class="slider-title">Blur</span>
+                <span class="slider-val-badge" id="filter-blur-val">0px</span>
+              </div>
+              <input type="range" id="filter-blur" min="0" max="20" value="0">
+            </div>
+
+            <!-- Hue Rotate -->
+            <div class="slider-container" style="margin-top: 8px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Hue Rotate</span>
+                <span class="slider-val-badge" id="filter-hue-val">0°</span>
+              </div>
+              <input type="range" id="filter-hue" min="0" max="360" value="0">
+            </div>
+
+            <!-- Quick Effects -->
+            <div class="segmented-control" style="margin-top: 12px;">
+              <button class="segmented-btn" id="filter-toggle-grayscale"><i data-lucide="circle-off"></i> Grayscale</button>
+              <button class="segmented-btn" id="filter-toggle-sepia"><i data-lucide="sun"></i> Sepia</button>
+              <button class="segmented-btn" id="filter-toggle-invert"><i data-lucide="contrast"></i> Invert</button>
+            </div>
+          </div>
+
+
+
+          <!-- Transform -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Transform</span>
+            </div>
+            <div class="segmented-control">
+              <button class="segmented-btn" id="image-rotate-btn"><i data-lucide="rotate-cw"></i> Rotate 90°</button>
+              <button class="segmented-btn" id="image-flip-h-btn"><i data-lucide="flip-horizontal-2"></i> Flip H</button>
+              <button class="segmented-btn" id="image-flip-v-btn"><i data-lucide="flip-vertical-2"></i> Flip V</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Image Export Section -->
+          <div class="section-block" id="image-export-block">
+            <div class="status-pill" style="opacity: 0.7;">Upload an image to edit</div>
+          </div>
+
+          <!-- Sidebar Footer -->
+          <div class="divider"></div>
+          <div class="sidebar-footer-block" style="padding: 12px 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text-muted); text-align: center;">
+            <span>© 2026 RSA Engineering. All rights reserved.</span>
+            <button class="open-terms-modal-btn terms-link-btn" style="background: none; border: none; color: var(--accent-primary); font-size: 0.72rem; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 2px 4px;">Terms & Conditions</button>
+          </div>
+        </div>
+
+
+        <!-- ================= GRADIENT TAB ================= -->
+        <div id="sidebar-gradient-controls" class="hidden">
+
+          <!-- Gradient Type -->
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Gradient Type</span>
+            </div>
+            <div class="segmented-control" style="gap: 4px;">
+              <button class="segmented-btn active" data-gmode="linear" style="flex: 1;">Linear</button>
+              <button class="segmented-btn" data-gmode="positional" style="flex: 1;">Positional</button>
+              <button class="segmented-btn" data-gmode="animated" style="flex: 1;"><i data-lucide="play" style="width:13px; height:13px;"></i> Animated</button>
+            </div>
+          </div>
+
+          <!-- Animated DaVinci Fusion Effects -->
+          <div id="animated-type-container" class="section-block hidden">
+            <div class="section-header">
+              <div class="section-indicator" style="background: var(--accent-primary); box-shadow: 0 0 8px var(--accent-primary);"></div>
+              <span class="section-title-text">Fusion Effects</span>
+            </div>
+
+            <div class="slider-container" style="margin-bottom: 10px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Fast Noise Displacement</span>
+                <span class="slider-val-badge" id="animated-displacement-val">35%</span>
+              </div>
+              <input type="range" id="animated-displacement-slider" min="0" max="100" step="1" value="35" class="sk-slider">
+            </div>
+
+            <div class="slider-container" style="margin-bottom: 10px;">
+              <div class="slider-info-row">
+                <span class="slider-title">Gaussian Blur Softness</span>
+                <span class="slider-val-badge" id="animated-blur-val">0px</span>
+              </div>
+              <input type="range" id="animated-blur-slider" min="0" max="50" step="1" value="0" class="sk-slider">
+            </div>
+          </div>
+
+          <!-- Color Stops (Linear / Animated / Aurora) -->
+          <div id="color-stops-container" class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Color Palette</span>
+            </div>
+            <div id="color-stops-list" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamic color stop items -->
+            </div>
+            <div style="height: 10px;"></div>
+            <button class="btn-sk btn-dashed-sk" id="add-color-stop-btn">
+              <i data-lucide="plus"></i> Add Color Stop
+            </button>
+          </div>
+
+          <!-- Positional Points (N-Point Gradients) -->
+          <div id="positional-container" class="section-block hidden">
+            <div class="section-header" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="section-indicator" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></div>
+                <span class="section-title-text">Positional Control Points</span>
+              </div>
+              <button class="btn-sk btn-secondary-sk" id="add-positional-point-btn" style="padding: 4px 8px; font-size: 0.72rem;">
+                <i data-lucide="plus"></i> Add Point
+              </button>
+            </div>
+            <div id="positional-points-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+              <!-- Dynamic positional points -->
+            </div>
+          </div>
+
+          
+
+          <!-- Rotation Angle (Linear) -->
+          <div id="angle-container" class="section-block">
+            <div class="divider"></div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="section-title-text" style="font-size: 0.82rem; font-weight: 700;">Rotational Angle</span>
+              </div>
+
+              <!-- Interactive Angle Dial & Slider Grid (Slider + Circle Dial Wheel Only) -->
+              <div style="display: flex; align-items: center; gap: 14px; background: var(--bg-card); padding: 12px; border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+                <!-- Angle Dial Wheel (Circle Way) -->
+                <div id="angle-dial-wheel" style="width: 52px; height: 52px; border-radius: 50%; background: var(--bg-recessed); border: 2px solid var(--border-color); position: relative; cursor: grab; flex-shrink: 0; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2); touch-action: none;">
+                  <div id="angle-dial-needle" style="width: 2px; height: 20px; background: var(--accent-primary); position: absolute; top: 6px; left: 25px; transform-origin: bottom center; transform: rotate(90deg); border-radius: 2px; box-shadow: 0 0 8px var(--accent-primary);"></div>
+                  <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-main); position: absolute; top: 22px; left: 22px;"></div>
+                </div>
+
+                <!-- Angle Slider (Slider Way) -->
+                <div class="slider-container" style="flex: 1;">
+                  <div class="slider-info-row" style="margin-bottom: 6px;">
+                    <span class="slider-title" style="font-size: 0.72rem;">Sweep Angle</span>
+                    <span class="slider-val-badge" id="angle-val">90°</span>
+                  </div>
+                  <input type="range" id="angle-slider" min="0" max="360" value="90" class="sk-slider">
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Midpoint Balance -->
+            <div style="height: 12px;"></div>
+            <div class="section-block">
+              <div class="slider-container">
+                <div class="slider-info-row" style="margin-bottom: 6px;">
+                  <span class="slider-title" style="font-size: 0.72rem; font-weight: 700;">Color Midpoint Balance</span>
+                  <span class="slider-val-badge" id="gradient-midpoint-val">50%</span>
+                </div>
+                <input type="range" id="gradient-midpoint-slider" min="5" max="95" value="50" class="sk-slider">
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline & Keyframes -->
+          <div id="angle-container-timeline-anchor" style="display:none;"></div>
+
+          <!-- Texture Noise Switcher -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="toggle-row">
+              <div class="section-header" style="margin-bottom: 0;">
+                <div class="section-indicator" id="noise-dot"></div>
+                <span class="section-title-text">Texture Noise</span>
+              </div>
+              <button class="toggle-switch-sk" id="noise-toggle-btn">
+                <div class="toggle-knob-sk"></div>
+              </button>
+            </div>
+
+            <div id="noise-controls-panel" class="hidden" style="margin-top: 14px;">
+              <div class="slider-container">
+                <div class="slider-info-row">
+                  <span class="slider-title">Granularity</span>
+                  <span class="slider-val-badge" id="noise-freq-val">0.65</span>
+                </div>
+                <input type="range" id="noise-freq-slider" min="0.1" max="2.0" step="0.05" value="0.65">
+              </div>
+              
+              <div style="height: 10px;"></div>
+
+              <div class="slider-container">
+                <div class="slider-info-row">
+                  <span class="slider-title">Blend Opacity</span>
+                  <span class="slider-val-badge" id="noise-opacity-val">15%</span>
+                </div>
+                <input type="range" id="noise-opacity-slider" min="0.01" max="1.0" step="0.01" value="0.15">
+              </div>
+            </div>
+          </div>
+
+          <!-- Gradient Export -->
+          <div class="divider"></div>
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Export Gradient Image</span>
+            </div>
+
+            <div style="position: relative;" id="gradient-export-dropdown-anchor">
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-sk btn-primary-sk" id="gradient-export-main-btn" style="flex: 1;">
+                  <i data-lucide="download"></i>
+                  <span>Export Gradient</span>
+                </button>
+                <button class="btn-sk btn-icon-sk" id="gradient-export-chevron-btn">
+                  <i data-lucide="chevron-down"></i>
+                </button>
+              </div>
+
+              <div class="dropdown-menu-sk hidden" id="gradient-export-menu">
+                <div class="dropdown-header-sk">Resolutions</div>
+                <div id="gradient-resolutions-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar Footer -->
+          <div class="divider"></div>
+          <div class="sidebar-footer-block" style="padding: 12px 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text-muted); text-align: center;">
+            <span>© 2026 RSA Engineering. All rights reserved.</span>
+            <button id="open-terms-modal-btn" class="terms-link-btn" style="background: none; border: none; color: var(--accent-primary); font-size: 0.72rem; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 2px 4px;">Terms & Conditions</button>
+          </div>
+        </div>
+
+        <!-- ================= VIDEO TAB ================= -->
+        <div id="sidebar-video-controls" class="hidden">
+          <!-- Video Source Block -->
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Video Source</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <input type="file" accept="video/*" id="video-file-input" class="hidden">
+              <button class="btn-sk btn-primary-sk" id="video-upload-btn">
+                <i data-lucide="upload-cloud"></i> Upload Video File
+              </button>
+              <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;" id="video-file-name">No video file loaded</div>
+            </div>
+          </div>
+
+          <!-- AI Audio Transcription & Subtitles Block -->
+          <div class="section-block" id="video-transcribe-block">
+            <div class="section-header">
+              <div class="section-indicator" style="background: var(--accent-primary); box-shadow: 0 0 8px var(--accent-primary);"></div>
+              <span class="section-title-text"><i data-lucide="sparkles" style="width:14px; height:14px; color:var(--accent-primary);"></i> AI Subtitles</span>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <!-- API Key Status / Notice -->
+              <div id="video-api-key-status-box" style="padding: 8px 10px; border-radius: 6px; background: var(--bg-recessed); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; font-weight: 700;">
+                  <span style="color: var(--text-sub);">Groq API Key:</span>
+                  <span id="video-key-status-badge" style="color: var(--accent-primary); font-size: 0.68rem; font-weight: 700;">No API Key</span>
+                </div>
+                <div id="video-key-notice-text" style="font-size: 0.68rem; color: var(--text-muted); line-height: 1.3;">
+                  No API key inserted for subtitle generation. Please configure your Groq API key in Settings.
+                </div>
+                <button class="btn-sk btn-secondary-sk btn-xs-compact" id="btn-open-settings-api-key" style="margin-top: 2px; font-size: 0.7rem; justify-content: center; width: 100%;">
+                  <i data-lucide="settings" style="width:12px; height:12px;"></i> Open API Settings
+                </button>
+              </div>
+
+              <!-- Language & Transliteration Settings -->
+              <div>
+                <div style="font-size:0.72rem; font-weight:700; color:var(--text-sub); margin-bottom:4px;">Transcription Mode:</div>
+                <select id="transcribe-language-mode" class="sk-select" style="width:100%; padding:6px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-size:0.75rem; font-weight:600;">
+                  <option value="hinglish_roman" selected>Hinglish</option>
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                </select>
+              </div>
+
+              <!-- Generate Subtitles Button -->
+              <button class="btn-sk btn-primary-sk" id="btn-generate-subtitles" style="width:100%; margin-top:2px;">
+                <i data-lucide="sparkles"></i> Generate AI Subtitles
+              </button>
+
+              <!-- Progress Track -->
+              <div id="subtitles-progress-container" class="hidden" style="margin-top:6px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">
+                  <span id="subtitles-progress-text">Extracting Audio...</span>
+                  <span id="subtitles-progress-pct">0%</span>
+                </div>
+                <div class="ai-progress-track" style="height:6px; border-radius:3px; background:var(--bg-recessed); overflow:hidden;">
+                  <div id="subtitles-progress-bar" class="ai-progress-fill" style="width:0%; height:100%; background:linear-gradient(90deg, var(--accent-primary), #55FF00); transition:width 0.2s;"></div>
+                </div>
+              </div>
+
+              <!-- Subtitle Styling Controls -->
+              <div id="subtitle-style-controls" class="hidden" style="margin-top:6px; padding:10px; border-radius:8px; background:var(--bg-card); border:1px solid var(--border-subtle); display:flex; flex-direction:column; gap:8px;">
+                <div style="font-size:0.72rem; font-weight:800; color:var(--text-main); text-transform:uppercase; letter-spacing:0.5px;">Caption Appearance</div>
+                
+                <div style="display:flex; gap:6px; align-items:center; justify-content:space-between;">
+                  <span style="font-size:0.72rem; color:var(--text-sub);">Position:</span>
+                  <div class="segmented-control" style="gap:2px;">
+                    <button class="segmented-btn active" id="sub-pos-bottom" style="padding:2px 8px; font-size:0.7rem;">Bottom</button>
+                    <button class="segmented-btn" id="sub-pos-center" style="padding:2px 8px; font-size:0.7rem;">Center</button>
+                    <button class="segmented-btn" id="sub-pos-top" style="padding:2px 8px; font-size:0.7rem;">Top</button>
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:6px; align-items:center; justify-content:space-between;">
+                  <span style="font-size:0.72rem; color:var(--text-sub);">Font Size:</span>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="range" id="sub-font-size-slider" min="14" max="36" value="22" style="width:100px;">
+                    <span id="sub-font-size-val" style="font-size:0.72rem; font-weight:700; color:var(--accent-primary);">22px</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:6px; align-items:center; justify-content:space-between;">
+                  <span style="font-size:0.72rem; color:var(--text-sub);">Text Color:</span>
+                  <input type="color" id="sub-text-color-picker" value="#FFFF00" style="width:28px; height:24px; border:none; border-radius:4px; cursor:pointer; background:none;">
+                </div>
+
+                <div style="display:flex; gap:6px; align-items:center; justify-content:space-between;">
+                  <span style="font-size:0.72rem; color:var(--text-sub);">Highlight Box:</span>
+                  <input type="color" id="sub-bg-color-picker" value="#000000" style="width:28px; height:24px; border:none; border-radius:4px; cursor:pointer; background:none;">
+                </div>
+
+                <!-- Subtitles Download & Burn Toggle -->
+                <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn-sk btn-secondary-sk" id="btn-download-vtt" style="flex:1; font-size:0.7rem; padding:4px 6px;">
+                      <i data-lucide="file-text"></i> Export .VTT
+                    </button>
+                    <button class="btn-sk btn-secondary-sk" id="btn-download-srt" style="flex:1; font-size:0.7rem; padding:4px 6px;">
+                      <i data-lucide="file-text"></i> Export .SRT
+                    </button>
+                  </div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.72rem;">
+                    <span style="color:var(--text-sub); font-weight:600;">Burn Captions on Export:</span>
+                    <button class="toggle-switch-sk active" id="toggle-burn-captions">
+                      <div class="toggle-knob-sk"></div>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Video Color Grading Block -->
+          <div class="section-block" id="video-grading-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Color Grading</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:600; margin-bottom:4px;">
+                  <span>Brightness</span>
+                  <span id="vid-brightness-val" style="color:var(--accent-primary);">100%</span>
+                </div>
+                <input type="range" id="vid-brightness" min="0" max="200" value="100">
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:600; margin-bottom:4px;">
+                  <span>Contrast</span>
+                  <span id="vid-contrast-val" style="color:var(--accent-primary);">100%</span>
+                </div>
+                <input type="range" id="vid-contrast" min="0" max="200" value="100">
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:600; margin-bottom:4px;">
+                  <span>Saturation</span>
+                  <span id="vid-saturate-val" style="color:var(--accent-primary);">100%</span>
+                </div>
+                <input type="range" id="vid-saturate" min="0" max="200" value="100">
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:600; margin-bottom:4px;">
+                  <span>Hue Rotate</span>
+                  <span id="vid-hue-val" style="color:var(--accent-primary);">0°</span>
+                </div>
+                <input type="range" id="vid-hue" min="-180" max="180" value="0">
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Cinematic LUTs -->
+          <div class="section-block" id="video-lut-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Cinematic 3D LUT</span>
+            </div>
+            <div id="vid-lut-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
+
+          <!-- Video Resize & Resolution -->
+          <div class="section-block" id="video-resize-block">
+            <div class="section-header">
+              <div class="section-indicator"></div>
+              <span class="section-title-text">Export Scale</span>
+            </div>
+            <div class="segmented-control" style="display:flex; gap:6px;">
+              <button class="segmented-btn active" id="vid-scale-1x">1.0x (1080p)</button>
+              <button class="segmented-btn" id="vid-scale-15x">1.5x (2K)</button>
+              <button class="segmented-btn" id="vid-scale-2x">2.0x (4K)</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <button class="btn-sk btn-primary-sk" id="video-export-btn" style="width:100%;">
+              <i data-lucide="download"></i> Export Graded Video
+            </button>
+          </div>
+
+          <!-- Sidebar Footer -->
+          <div class="divider"></div>
+          <div class="sidebar-footer-block" style="padding: 12px 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text-muted); text-align: center;">
+            <span>© 2026 RSA Engineering. All rights reserved.</span>
+            <button class="open-terms-modal-btn terms-link-btn" style="background: none; border: none; color: var(--accent-primary); font-size: 0.72rem; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 2px 4px;">Terms & Conditions</button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN WORKSPACE ==================== -->
+    <main class="main-workspace">
+
+
+      <!-- ================= ERASER WORKSPACE ================= -->
+      <div id="workspace-image-layout" class="workspace-layout">
+        <!-- Source Image Box -->
+        <div class="panel-sk" style="flex: 1; min-height: 0;">
+          <div class="panel-header-sk">
+            <div class="panel-title-sk">
+              <i data-lucide="image"></i> Source Image
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="btn-sk btn-secondary-sk btn-xs-compact" id="image-undo-btn" title="Undo (Ctrl+Z)" disabled>
+                <i data-lucide="undo-2" style="width:14px; height:14px;"></i> Undo
+              </button>
+              <button class="btn-sk btn-secondary-sk btn-xs-compact" id="image-redo-btn" title="Redo (Ctrl+Y)" disabled>
+                <i data-lucide="redo-2" style="width:14px; height:14px;"></i> Redo
+              </button>
+              <input type="file" accept="image/*" id="file-input-element" class="hidden">
+              <label for="file-input-element" class="btn-sk btn-secondary-sk" style="padding: 6px 12px; font-size: 0.75rem;">
+                <i data-lucide="upload-cloud"></i>
+                <span id="upload-label-text">Upload Image</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="panel-body-sk checkerboard-bg" id="source-panel-body">
+            <div class="upload-placeholder-box" id="upload-placeholder">
+              <div class="upload-icon-circle">
+                <i data-lucide="image" style="width: 28px; height: 28px; color: var(--color-muted-teal);"></i>
+              </div>
+              <span style="font-size: 0.85rem; font-weight: 500;">Select an image to start editing</span>
+            </div>
+
+            <!-- Canvas view for source / interactive brush (Pan/Zoom enabled) -->
+            <div class="canvas-wrap hidden" id="source-canvas-wrap" style="overflow: hidden; position: relative;">
+              <canvas id="editor-canvas" class="canvas-element" style="transform-origin: 0 0; transition: transform 0.05s linear;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Result Box -->
+        <div class="panel-sk" style="flex: 1; min-height: 0;">
+          <div class="panel-header-sk">
+            <div class="panel-title-sk" style="color: var(--color-seaweed);">
+              <i data-lucide="layers"></i> Preview Result
+            </div>
+            <div id="processing-spinner" class="hidden" style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--color-muted-teal);">
+              <i data-lucide="loader-2" class="animate-spin" style="width: 14px; height: 14px;"></i> Processing...
+            </div>
+          </div>
+
+          <div class="panel-body-sk checkerboard-bg">
+            <div id="preview-placeholder-text" style="font-size: 0.8rem; color: var(--text-muted);">Waiting for image...</div>
+            <img id="preview-result-img" class="canvas-element hidden" alt="Result Preview">
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= GRADIENT WORKSPACE ================= -->
+      <div id="workspace-gradient-layout" class="workspace-layout hidden">
+        <!-- Live Gradient Viewport -->
+        <div style="position: relative; display: flex; flex: 1; min-height: 0;">
+          <div class="gradient-preview-viewport" id="gradient-live-viewport"></div>
+          <div class="canvas-handle-overlay" id="canvas-handles-overlay"></div>
+        </div>
+
+        <!-- ================= FULL-WIDTH TIMELINE (moved from sidebar) ================= -->
+        <div id="media-timeline-container" class="gradient-bottom-timeline hidden">
+          <div class="media-player-card">
+            <div class="media-player-display">
+              <span class="media-title" id="timeline-title-display"><i data-lucide="play-circle"></i> Timeline</span>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span class="slider-title" style="font-size:0.68rem;">Cycle Duration</span>
+                <input type="range" id="animation-duration-slider" min="1" max="20" step="0.5" value="5" style="width:90px;">
+                <span class="slider-val-badge" id="animation-duration-val">5.0s</span>
+                <span class="media-timestamp" id="timeline-timestamp">00:00 / 05:00</span>
+              </div>
+            </div>
+
+            <div class="timeline-middle-row" style="gap: 24px;">
+              <button class="media-btn-round" id="btn-media-prev" title="Previous Keyframe"><i data-lucide="skip-back"></i></button>
+              <button class="media-btn-round play-primary" id="btn-media-play" title="Play / Pause"><i data-lucide="play" id="play-icon"></i></button>
+              <button class="media-btn-round" id="btn-media-next" title="Next Keyframe"><i data-lucide="skip-forward"></i></button>
+
+              <div class="timeline-track-container" id="timeline-track-wrap" style="flex:1;">
+                <div class="timeline-bar-bg"></div>
+                <div class="timeline-progress-fill" id="timeline-progress-fill" style="width: 0%;"></div>
+                <div id="timeline-markers-layer"></div>
+                <div class="timeline-scrubber-knob" id="scrubber-knob" style="left: 0%;">
+                  <div class="scrubber-inner-grip"><span></span><span></span></div>
+                </div>
+                <input type="range" id="timeline-slider" min="0" max="100" value="0" step="0.5" class="timeline-scrubber-input">
+              </div>
+
+              <button class="btn-sk btn-primary-sk btn-xs-compact" id="add-keyframe-current-btn" title="Add Keyframe at current time">
+                <i data-lucide="plus" style="width:14px; height:14px;"></i> <span>Keyframe</span>
+              </button>
+            </div>
+
+            <!-- Keyframes List for Radial Wave -->
+            <div id="media-keyframes-list" class="kf-chip-row"></div>
+
+            <!-- Effect-Tailored Motion Presets Bar -->
+            <div id="effect-timeline-presets" class="effect-timeline-preset-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= VIDEO WORKSPACE ================= -->
+      <div id="workspace-video-layout" class="workspace-layout hidden">
+        <div class="gradient-preview-viewport" id="video-preview-viewport" style="flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg-recessed); padding:20px; position:relative; overflow:hidden;">
+          
+          <!-- Video Canvas / Player Container -->
+          <div id="video-canvas-container" style="position:relative; max-width:100%; max-height:calc(100% - 60px); display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <video id="video-player-el" class="hidden" style="max-width:100%; max-height:100%; border-radius:var(--radius-md); display:block;"></video>
+            <!-- Live Synchronized Subtitle Overlay -->
+            <div id="video-subtitle-overlay" class="hidden" style="position:absolute; bottom:10%; left:50%; transform:translateX(-50%); width:90%; text-align:center; pointer-events:none; z-index:20; transition:all 0.15s ease;">
+              <span id="video-subtitle-text" style="display:inline-block; font-family:var(--font-heading); font-size:22px; font-weight:800; color:#FFFF00; background:rgba(0,0,0,0.85); padding:6px 14px; border-radius:6px; text-shadow:0 2px 8px rgba(0,0,0,0.9); max-width:100%; word-wrap:break-word; line-height:1.3;"></span>
+            </div>
+          </div>
+
+          <!-- Video Playback Transport Controls Bar (3D Skeuomorphic Deck) -->
+          <div id="video-controls-bar" class="hidden skeu-media-deck">
+            <button id="btn-vid-play-pause" class="skeu-deck-btn play-btn" title="Play / Pause">
+              <i data-lucide="play" style="width:16px; height:16px;"></i>
+            </button>
+            
+            <button id="btn-vid-rewind" class="skeu-deck-btn seek-btn" title="Rewind 10s">
+              <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> -10s
+            </button>
+
+            <button id="btn-vid-forward" class="skeu-deck-btn seek-btn" title="Forward 10s">
+              <i data-lucide="rotate-cw" style="width:13px; height:13px;"></i> +10s
+            </button>
+
+            <div id="vid-timecode-display" class="skeu-lcd-display">
+              00:00 / 00:00
+            </div>
+            
+            <!-- Smooth 3D Beveled Seek Track -->
+            <div id="vid-seek-track-container" class="skeu-seek-track-wrap">
+              <div class="skeu-seek-track-bg">
+                <div id="vid-seek-buffer-bar" class="skeu-buffer-bar"></div>
+                <div id="vid-seek-progress-fill" class="skeu-progress-fill"></div>
+              </div>
+              <div id="vid-seek-handle" class="skeu-seek-knob"></div>
+            </div>
+
+            <!-- 3D Volume Section -->
+            <div class="skeu-volume-wrap">
+              <i data-lucide="volume-2" class="skeu-volume-icon"></i>
+              <input type="range" id="vid-volume-slider" min="0" max="100" value="100" class="skeu-vol-slider">
+            </div>
+          </div>
+
+          <div id="video-empty-state" style="text-align:center; padding:60px 40px; max-width:480px;">
+            <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary, var(--color-stormy-teal))); display:flex; align-items:center; justify-content:center; margin:0 auto 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+              <i data-lucide="film" style="width:36px; height:36px; color:#fff;"></i>
+            </div>
+            <h2 style="font-size:1.5rem; font-weight:800; color:var(--text-main); margin-bottom:12px; letter-spacing:-0.02em;">Video Studio Workspace</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">Upload a video file to generate AI Hinglish subtitles, apply 3D color grading LUTs, and burn captions live.</p>
+          </div>
+        </div>
+      </div>
+
+
+    </main>
+  </div>
+
+  <!-- ================= CUSTOM COLOR PICKER MODAL ================= -->
+  <div id="color-picker-modal-overlay" class="export-modal-backdrop hidden" style="backdrop-filter: blur(12px);">
+    <div class="color-picker-card skeu-raised" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 22px; width: 340px; box-shadow: 0 24px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06) inset; display: flex; flex-direction: column; gap: 16px; position: relative;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <span style="font-size: 0.95rem; font-weight: 800; color: var(--text-white); display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px;">
+          <i data-lucide="palette" style="width: 18px; height: 18px; color: var(--color-seaweed);"></i> Color Studio
+        </span>
+        <button id="color-picker-close-btn" class="settings-icon-btn" style="width: 30px; height: 30px;">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Saturation / Brightness Area -->
+      <div id="cp-sat-val-area" style="width: 100%; height: 185px; border-radius: 12px; position: relative; cursor: crosshair; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15), 0 6px 16px rgba(0,0,0,0.4); background-color: #ff0000; background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent); overflow: hidden;">
+        <div id="cp-sat-val-thumb" style="width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.3); position: absolute; transform: translate(-50%, -50%); pointer-events: none;"></div>
+      </div>
+
+      <!-- Hue Slider Track -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-sub); font-weight: 600;">
+          <span>Hue Angle</span>
+          <span style="font-family: var(--font-mono); color: var(--color-seaweed);">Spectrum</span>
+        </div>
+        <div id="cp-hue-track" style="width: 100%; height: 18px; border-radius: 999px; position: relative; cursor: pointer; background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%); box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);">
+          <div id="cp-hue-thumb" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.6); position: absolute; top: -1px; transform: translate(-50%, 0); pointer-events: none;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-recessed); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div id="cp-preview-swatch" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2), 0 3px 8px rgba(0,0,0,0.4); flex-shrink: 0;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">HEX Code</span>
+          <input type="text" id="cp-hex-input" value="#FFFFFF" style="width: 100%; background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; outline: none;">
+        </div>
+        <div style="display: flex; gap: 4px; border-left: 1px solid var(--border-color); padding-left: 10px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 28px;">
+            <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 700;">R</span>
+            <input type="number" id="cp-r-input" min="0" max="255" value="255" style="width: 28px; background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-align: center; outline: none;">
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 28px;">
+            <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 700;">G</span>
+            <input type="number" id="cp-g-input" min="0" max="255" value="255" style="width: 28px; background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-align: center; outline: none;">
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 28px;">
+            <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 700;">B</span>
+            <input type="number" id="cp-b-input" min="0" max="255" value="255" style="width: 28px; background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-align: center; outline: none;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Palette -->
+      <div>
+        <div style="font-size: 0.68rem; color: var(--text-sub); margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Presets</div>
+        <div id="cp-quick-palette" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <!-- Buttons dynamically added in JS -->
+        </div>
+      </div>
+
+      <button class="btn-sk btn-primary-sk" id="cp-apply-btn" style="width: 100%; justify-content: center; padding: 10px; font-size: 0.85rem; margin-top: 4px;">
+        Apply Color
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Dynamic CSS Styles for Animated Keyframes -->
+  <style id="dynamic-keyframes-holder"></style>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 99999;"></div>
+
+  <!-- WebM / MP4 Video Exporter Fallback -->
+  <script src="app.js"></script>
+</body>
+</html>
